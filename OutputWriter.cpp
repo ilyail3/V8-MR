@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include "MapWriter.h"
+#include "OutputWriter.h"
 #include <unistd.h>
 
 const char* null_string = "null";
@@ -22,7 +22,7 @@ void write_string(FILE* file_handler, char* string){
     fwrite(string, sizeof(char), strlen(string), file_handler);
 }
 
-void MapWriter::flush() {
+void OutputWriter::flush() {
 
     char flush_output[200] = "";
     // Get directory for output filename
@@ -96,7 +96,7 @@ void MapWriter::flush() {
     printf("Flush map\n");
 }
 
-char* MapWriter::copy_string(char *string) {
+char* OutputWriter::copy_string(char *string) {
     size_t len = strlen(string);
     char* location = (char*)buffer + offset;
 
@@ -109,14 +109,14 @@ char* MapWriter::copy_string(char *string) {
     return location;
 }
 
-void MapWriter::add_item(char *key, char *value) {
+void OutputWriter::add_item(char *key, char *value) {
     if(data.find(key) == data.end())
         data[key] = std::vector<char*>();
 
     data[key].push_back(value);
 }
 
-void MapWriter::write_key(char *key) {
+void OutputWriter::write_key(char *key) {
     if(offset+strlen(key)+1 > BUFFER_SIZE)
         flush();
 
@@ -124,7 +124,7 @@ void MapWriter::write_key(char *key) {
 
 }
 
-void MapWriter::write_key_value(char *key, char *value) {
+void OutputWriter::write_key_value(char *key, char *value) {
     if(offset+strlen(key)+strlen(value)+2 > BUFFER_SIZE)
         flush();
 
@@ -133,14 +133,14 @@ void MapWriter::write_key_value(char *key, char *value) {
     add_item(key_copy, value_copy);
 }
 
-MapWriter::~MapWriter() {
+OutputWriter::~OutputWriter() {
     flush();
     printf("MapWriterDispose\n");
 
     free(buffer);
 }
 
-MapWriter::MapWriter(const char *dir_name) {
+OutputWriter::OutputWriter(const char *dir_name) {
     this->dir_name = dir_name;
 
     buffer = (char*)malloc(BUFFER_SIZE);

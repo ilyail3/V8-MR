@@ -19,8 +19,9 @@
 
 #include "v8/libplatform/libplatform.h"
 #include "v8/v8.h"
-#include "MapWriter.h"
+#include "OutputWriter.h"
 #include "MergeMap.h"
+#include "pretty_print.h"
 
 #define MAP_WRITER 1001
 
@@ -61,7 +62,7 @@ void yield_callback(const FunctionCallbackInfo<Value> &args) {
 
     Local<Function> stringify = Handle<Function>::Cast(JSON->Get(String::NewFromUtf8(isolate, "stringify")));
 
-    MapWriter *mapWriter = (MapWriter *) Local<External>::Cast(args.Data())->Value();
+    OutputWriter *mapWriter = (OutputWriter *) Local<External>::Cast(args.Data())->Value();
 
 
     Local<Value> argv[] = {
@@ -169,7 +170,7 @@ void map(Isolate::CreateParams create_params, const char* input_file, const char
 
         fread(data, 1, page_size, fd);
 
-        MapWriter mapWriter(dir_name);
+        OutputWriter mapWriter(dir_name);
 
         Isolate::Scope isolate_scope(isolate);
 
@@ -276,7 +277,7 @@ void reduce(Isolate::CreateParams create_params, const char* input_file, const c
 
 
     {
-        MapWriter mapWriter(dir_name);
+        OutputWriter mapWriter(dir_name);
 
         FILE *fd = fopen(input_file, "r");
         if (fd == NULL) {
@@ -400,6 +401,7 @@ int main(int argc, char *argv[]) {
 
     const char *map_output = "/tmp/map_result";
     const char *reduce_output = "/tmp/reduce_result";
+    const char *pretty_output = "/tmp/pretty";
 
     char map_file[300];
     char reduce_file[300];
@@ -409,7 +411,9 @@ int main(int argc, char *argv[]) {
 
     reduce(create_params, map_file, reduce_output, reduce_file);
 
-    printf("Result written to:%s\n", reduce_file);
+    //printf("Result written to:%s\n", reduce_file);
+    pretty_print(reduce_file, pretty_output);
+
 
 
 

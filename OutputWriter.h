@@ -21,7 +21,7 @@ void write_short(FILE* file_handler, size_t value);
 
 void write_string(FILE* file_handler, char* string);
 
-class MapWriter {
+class OutputWriter {
 private:
     static const size_t BUFFER_SIZE = 1000000;
     char* buffer;
@@ -40,6 +40,6 @@ public:
     void write_key_value(char* key, char* value);
     void flush();
 
-    ~MapWriter();
-    MapWriter(const char* dir_name);
+    ~OutputWriter();
+    OutputWriter(const char* dir_name);
 };

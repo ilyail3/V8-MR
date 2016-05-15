@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <cstdint>
 #include <cstdlib>
-#include "MapWriter.h"
+#include "OutputWriter.h"
 
 struct dirent* readreal(DIR* dir_handler){
     struct dirent *dp;
