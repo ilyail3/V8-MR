@@ -8,13 +8,8 @@
 
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
-#include <byteswap.h>
-#include <vector>
 #include <map>
-#include <mutex>
 
 
 #include "v8/libplatform/libplatform.h"
@@ -23,7 +18,7 @@
 #include "MergeMap.h"
 #include "pretty_print.h"
 
-#define MAP_WRITER 1001
+
 
 using namespace v8;
 
@@ -42,7 +37,7 @@ public:
 struct ReduceKeyContext {
     bool iterated;
     FILE *file_handler;
-    char* member;
+    char *member;
 };
 
 
@@ -69,7 +64,7 @@ void yield_callback(const FunctionCallbackInfo<Value> &args) {
             args[0]
     };
 
-    if(args[0]->IsUndefined())
+    if (args[0]->IsUndefined())
         argv[0] = Null(isolate);
 
     v8::String::Utf8Value key(stringify->Call(stringify, 1, argv));
@@ -80,7 +75,7 @@ void yield_callback(const FunctionCallbackInfo<Value> &args) {
     } else {
         argv[0] = args[1];
 
-        if(args[1]->IsUndefined())
+        if (args[1]->IsUndefined())
             argv[0] = Null(isolate);
 
         v8::String::Utf8Value value(stringify->Call(stringify, 1, argv));
@@ -106,14 +101,14 @@ void values_callback(const FunctionCallbackInfo<Value> &args) {
     Local<Function> v_function = Local<Function>::Cast(args[0]);
 
 
-
     read_string(reduceKeyContext->file_handler, reduceKeyContext->member);
 
     Local<Value> argv[1];
 
-    while(strlen(reduceKeyContext->member) != 0){
+    while (strlen(reduceKeyContext->member) != 0) {
 
-        argv[0] = JSON::Parse(String::NewFromUtf8(isolate, reduceKeyContext->member, NewStringType::kNormal, strlen(reduceKeyContext->member)).ToLocalChecked());
+        argv[0] = JSON::Parse(String::NewFromUtf8(isolate, reduceKeyContext->member, NewStringType::kNormal,
+                                                  strlen(reduceKeyContext->member)).ToLocalChecked());
 
         v_function->Call(v_function, 1, argv);
         read_string(reduceKeyContext->file_handler, reduceKeyContext->member);
@@ -121,7 +116,7 @@ void values_callback(const FunctionCallbackInfo<Value> &args) {
 }
 
 void map_record(Local<Value> global, Local<Function> function, Local<Function> callback, const char *data,
-               int data_len) {
+                int data_len) {
     Isolate *isolate = Isolate::GetCurrent();
 
     // This is important, without it V8 won't GC the variables used by the match
@@ -137,11 +132,9 @@ void map_record(Local<Value> global, Local<Function> function, Local<Function> c
 }
 
 
-
-void map(Isolate::CreateParams create_params, const char* input_file, const char* dir_name, char* map_filename){
+void map(Isolate::CreateParams create_params, const char *input_file, const char *dir_name, char *map_filename) {
     int totalOffset = 0, off = 0;
     int size;
-
 
 
     Isolate *isolate = Isolate::New(create_params);
@@ -214,7 +207,7 @@ void map(Isolate::CreateParams create_params, const char* input_file, const char
 
                 record_data = (data + off + 2);
 
-                total ++;
+                total++;
                 map_record(global, v_function, callback, record_data, size);
 
 
@@ -257,7 +250,7 @@ void map(Isolate::CreateParams create_params, const char* input_file, const char
     sprintf(map_filename, "%s/%s", dir_name, last_file);
 }
 
-void reduce_key(char* key, Local<Function> function, Local<Function> yield_cb, Local<Function> values_cb){
+void reduce_key(char *key, Local<Function> function, Local<Function> yield_cb, Local<Function> values_cb) {
     Isolate *isolate = Isolate::GetCurrent();
 
     // This is important, without it V8 won't GC the variables used by the match
@@ -273,7 +266,7 @@ void reduce_key(char* key, Local<Function> function, Local<Function> yield_cb, L
     function->Call(function, argc, argv);
 }
 
-void reduce(Isolate::CreateParams create_params, const char* input_file, const char* dir_name, char* reduce_filename){
+void reduce(Isolate::CreateParams create_params, const char *input_file, const char *dir_name, char *reduce_filename) {
 
 
     {
@@ -289,8 +282,8 @@ void reduce(Isolate::CreateParams create_params, const char* input_file, const c
         reduceKeyContext.file_handler = fd;
 
         //char key[MAX_ITEM_SIZE];
-        char* key = (char*)malloc(MAX_ITEM_SIZE);
-        char* member = (char*)malloc(MAX_ITEM_SIZE);
+        char *key = (char *) malloc(MAX_ITEM_SIZE);
+        char *member = (char *) malloc(MAX_ITEM_SIZE);
 
         reduceKeyContext.member = member;
 
@@ -343,7 +336,7 @@ void reduce(Isolate::CreateParams create_params, const char* input_file, const c
                 while (strlen(key) != 0) {
                     reduceKeyContext.iterated = false;
 
-                    reduce_key((char *) key, v_function, yield_cb, values_cb);
+                    reduce_key(key, v_function, yield_cb, values_cb);
 
 
                     if (!reduceKeyContext.iterated) {
@@ -373,14 +366,11 @@ void reduce(Isolate::CreateParams create_params, const char* input_file, const c
     }
 
 
-
     char last_file[200];
     merge_inputs(dir_name, last_file);
 
     sprintf(reduce_filename, "%s/%s", dir_name, last_file);
 }
-
-
 
 
 int main(int argc, char *argv[]) {
