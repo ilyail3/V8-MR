@@ -6,6 +6,8 @@
 
 #include <map>
 #include <vector>
+#include <cstring>
+#include "KVWriter.h"
 
 #define MAX_ITEM_SIZE 60000
 
@@ -17,29 +19,25 @@ struct cmp_str
     }
 };
 
-void write_short(FILE* file_handler, size_t value);
-
-void write_string(FILE* file_handler, char* string);
-
-class OutputWriter {
+class SeqFileWriter : public KVWriter {
 private:
     static const size_t BUFFER_SIZE = 1000000;
     char* buffer;
     size_t offset = 0;
 
     char* copy_string(char* string);
-    void add_item(char* key, char* value);
 
     std::map<char*, std::vector<char*>, cmp_str> data;
-
     unsigned int file_index = 0;
+
     const char* dir_name;
 
-public:
-    void write_key(char* key);
-    void write_key_value(char* key, char* value);
     void flush();
 
-    ~OutputWriter();
-    OutputWriter(const char* dir_name);
+public:
+    virtual void write(char* key, char* value = nullptr);
+
+
+    ~SeqFileWriter();
+    SeqFileWriter(const char* dir_name);
 };

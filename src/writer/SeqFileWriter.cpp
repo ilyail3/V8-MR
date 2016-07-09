@@ -2,15 +2,16 @@
 // Created by ilya on 5/14/16.
 //
 
+#include "SeqFileWriter.h"
+
 #include <cstring>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include "OutputWriter.h"
+
 #include <unistd.h>
 
 const char* null_string = "null";
-const char* vector_term = "\0";
 
 void write_short(FILE* file_handler, size_t value){
     uint16_t real_size = (uint16_t)value;
@@ -22,7 +23,7 @@ void write_string(FILE* file_handler, char* string){
     fwrite(string, sizeof(char), strlen(string), file_handler);
 }
 
-void OutputWriter::flush() {
+void SeqFileWriter::flush() {
 
     char flush_output[200] = "";
     // Get directory for output filename
@@ -96,7 +97,7 @@ void OutputWriter::flush() {
     printf("Flush map\n");
 }
 
-char* OutputWriter::copy_string(char *string) {
+char* SeqFileWriter::copy_string(char *string) {
     size_t len = strlen(string);
     char* location = (char*)buffer + offset;
 
@@ -109,38 +110,30 @@ char* OutputWriter::copy_string(char *string) {
     return location;
 }
 
-void OutputWriter::add_item(char *key, char *value) {
-    if(data.find(key) == data.end())
-        data[key] = std::vector<char*>();
-
-    data[key].push_back(value);
-}
-
-void OutputWriter::write_key(char *key) {
+void SeqFileWriter::write(char *key, char *value) {
     if(offset+strlen(key)+1 > BUFFER_SIZE)
         flush();
 
-    add_item(copy_string(key), (char*)null_string);
+    if(data.find(key) == data.end()) {
+        // If doesn't exist create and copy key
+        key = copy_string(key);
+        data[key] = std::vector<char *>();
+    }
 
+    if(value == nullptr)
+        data[key].push_back((char*)null_string);
+    else
+        data[key].push_back(copy_string(value));
 }
 
-void OutputWriter::write_key_value(char *key, char *value) {
-    if(offset+strlen(key)+strlen(value)+2 > BUFFER_SIZE)
-        flush();
-
-    char* key_copy = copy_string(key);
-    char* value_copy = copy_string(value);
-    add_item(key_copy, value_copy);
-}
-
-OutputWriter::~OutputWriter() {
+SeqFileWriter::~SeqFileWriter() {
     flush();
     printf("MapWriterDispose\n");
 
     free(buffer);
 }
 
-OutputWriter::OutputWriter(const char *dir_name) {
+SeqFileWriter::SeqFileWriter(const char *dir_name) {
     this->dir_name = dir_name;
 
     buffer = (char*)malloc(BUFFER_SIZE);
