@@ -16,6 +16,7 @@
 #include "MapOperation.h"
 #include "reader/KVStreamReader.h"
 #include "SortedMerge.h"
+#include "ReduceOperation.h"
 
 using namespace v8;
 using namespace std;
@@ -96,25 +97,28 @@ int main(int argc, char *argv[]) {
         printf("%s\n", item);
 
     }*/
+    {
+        SortedMerge merger;
+        SeqFileWriter writer("/tmp/merge");
 
-    SortedMerge merger;
-    SeqFileWriter writer("/tmp/merge");
-
-    const char* files[3];
-    files[0] = "/tmp/map_results/00000.map";
-    files[1] = "/tmp/map_results/00001.map";
-    files[2] = nullptr;
-
-
-    merger.merge((char**)files, &writer);
+        const char *files[3];
+        files[0] = "/tmp/map_results/00000.map";
+        files[1] = "/tmp/map_results/00001.map";
+        files[2] = nullptr;
 
 
+        merger.merge((char **) files, &writer);
+    }
+    {
+        SeqWriter writer("/tmp/reduce_res");
 
-    // Reduce block
+        ReduceOperation r(create_params, &writer);
 
+        KVStreamReader reader((char *) "/tmp/merge");
 
-    //printf("Total keys:%ld\n", projContext.mapData->size());
-
+        r.reduce(&reader,
+                 "function reduce(key, values_cb, yield){ var i = 0 ; values_cb(function(v){ i += 1; }); yield(key, i); }");
+    }
 
     V8::Dispose();
     V8::ShutdownPlatform();

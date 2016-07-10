@@ -40,7 +40,7 @@ void SortedMerge::merge(char **file, SeqFileWriter *writer) {
             if ((*it)->has_next() && strcmp(key, (*it)->peek()) == 0) {
                 (*it)->next(item);
 
-                while((*it)->has_next() && (*it)->next_type() == Value){
+                while((*it)->has_next() && (*it)->next_type() == TypeValue){
                     (*it)->next(item);
 
                     writer->write_value(item);

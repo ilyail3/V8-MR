@@ -4,10 +4,11 @@
 #pragma once
 
 #include <fstream>
+#include "../consts.h"
 
 enum NextType{
-    Key,
-    Value
+    TypeKey,
+    TypeValue
 };
 
 class KVStreamReader {
@@ -26,7 +27,7 @@ private:
     bool _has_next;
     unsigned short _next_size;
 
-    char buffer[10000];
+    char buffer[MAX_VAL_SIZE];
 
     std::ifstream fh;
 

@@ -39,10 +39,10 @@ void KVStreamReader::read_next() {
     buffer[_next_size] = 0;
 
     if(_next_key){
-        _next_type = Key;
+        _next_type = TypeKey;
         _next_key = false;
     } else
-        _next_type = Value;
+        _next_type = TypeValue;
 
     _has_next = true;
 }

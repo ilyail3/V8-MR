@@ -10,6 +10,7 @@ SeqFileWriter::SeqFileWriter(const char* filename) : fh(filename, std::ios::out 
 }
 
 SeqFileWriter::~SeqFileWriter() {
+    write_short(0);
     fh.close();
 }
 

@@ -8,6 +8,7 @@
 #include "rapidjson/reader.h"
 #include "rapidjson/filereadstream.h"
 #include "rapidjson/writer.h"
+#include "../consts.h"
 
 using namespace std;
 using namespace rapidjson;
@@ -176,14 +177,14 @@ CloudTrailReader::CloudTrailReader(const char *filename) {
 
 int CloudTrailReader::get_records(void *ref, record_callback callback) {
     FILE* fh = fopen(filename,"r");
-    char buffer[1000];
+    char buffer[MAX_VAL_SIZE];
 
     MyHandler handler;
 
     handler.ref = ref;
     handler.rcallback = callback;
 
-    FileReadStream readStream(fh, buffer, 1000);
+    FileReadStream readStream(fh, buffer, MAX_VAL_SIZE);
     Reader reader;
 
     reader.Parse(readStream, handler);
