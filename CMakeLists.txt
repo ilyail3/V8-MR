@@ -15,4 +15,4 @@ file(GLOB_RECURSE V8FileEval_SRC
         "*.cpp"
         )
 
-add_executable(V8FileEval ${V8FileEval_SRC} src/main.cpp)
+add_executable(V8FileEval ${V8FileEval_SRC} src/main.cpp src/reader/KVStreamReader.cpp src/reader/KVStreamReader.h src/SortedMerge.cpp src/SortedMerge.h src/writer/SeqFileWriter.cpp src/writer/SeqFileWriter.h)

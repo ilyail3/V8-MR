@@ -11,9 +11,11 @@
 
 #include "v8/libplatform/libplatform.h"
 #include "v8/v8.h"
-#include "writer/SeqFileWriter.h"
+#include "writer/SeqWriter.h"
 #include "reader/CloudTrailReader.h"
 #include "MapOperation.h"
+#include "reader/KVStreamReader.h"
+#include "SortedMerge.h"
 
 using namespace v8;
 using namespace std;
@@ -31,7 +33,7 @@ public:
 };
 
 void map_function(Isolate::CreateParams create_params, const char* filename, const char* dir_output, const char* js_source){
-    SeqFileWriter writer(dir_output);
+    SeqWriter writer(dir_output);
     CloudTrailReader reader(filename);
 
     MapOperation mapOperation(create_params, &writer);
@@ -71,12 +73,40 @@ int main(int argc, char *argv[]) {
     pretty_print(reduce_file, pretty_output);*/
 
 
-    map_function(
+    /*map_function(
             create_params,
             argv[1],
             "/tmp/map_results",
             "function map(obj,yield){ yield(obj.userAgent); }"
-    );
+    );*/
+
+    /*KVStreamReader reader("/tmp/map_results/00000.map");
+
+    while(reader.has_next()){
+        char item[1000];
+
+        if(reader.next_type() == Key) {
+            printf("key:");
+        } else {
+            printf("value:");
+        }
+
+        reader.next(item);
+
+        printf("%s\n", item);
+
+    }*/
+
+    SortedMerge merger;
+    SeqFileWriter writer("/tmp/merge");
+
+    const char* files[3];
+    files[0] = "/tmp/map_results/00000.map";
+    files[1] = "/tmp/map_results/00001.map";
+    files[2] = nullptr;
+
+
+    merger.merge((char**)files, &writer);
 
 
 
