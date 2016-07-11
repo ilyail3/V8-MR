@@ -1,0 +1,14 @@
+make native -j8 library=shared
+
+cd src
+
+sudo cp lib*.so /usr/local/lib/
+sudo cp lib*.a /usr/local/lib/
+
+cd third_party/icu
+
+sudo cp lib*.so /usr/local/lib/
+sudo cp lib*.a /usr/local/lib/
+
+cd out/native
+

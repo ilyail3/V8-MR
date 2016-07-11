@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include "v8/libplatform/libplatform.h"
-#include "v8/v8.h"
+#include "libplatform/libplatform.h"
+#include "v8.h"
 #include "writer/KVWriter.h"
 #include "reader/RecordsReader.h"
 

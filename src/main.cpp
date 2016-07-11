@@ -9,8 +9,8 @@
 #include <map>
 
 
-#include "v8/libplatform/libplatform.h"
-#include "v8/v8.h"
+#include "libplatform/libplatform.h"
+#include "v8.h"
 #include "writer/SeqWriter.h"
 #include "reader/CloudTrailReader.h"
 #include "MapOperation.h"
@@ -28,9 +28,13 @@ public:
         return data == NULL ? data : memset(data, 0, length);
     }
 
-    virtual void *AllocateUninitialized(size_t length) { return malloc(length); }
+    virtual void *AllocateUninitialized(size_t length) {
+        return malloc(length);
+    }
 
-    virtual void Free(void *data, size_t) { free(data); }
+    virtual void Free(void *data, size_t) {
+        free(data);
+    }
 };
 
 void map_function(Isolate::CreateParams create_params, const char* filename, const char* dir_output, const char* js_source){
@@ -74,12 +78,12 @@ int main(int argc, char *argv[]) {
     pretty_print(reduce_file, pretty_output);*/
 
 
-    /*map_function(
+    map_function(
             create_params,
             argv[1],
             "/tmp/map_results",
             "function map(obj,yield){ yield(obj.userAgent); }"
-    );*/
+    );
 
     /*KVStreamReader reader("/tmp/map_results/00000.map");
 
