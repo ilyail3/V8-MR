@@ -15,10 +15,6 @@
 const char* null_string = "null";
 
 void SeqWriter::flush() {
-
-
-
-
     if(data.size() > 0) {
         char flush_output[200] = "";
         // Get directory for output filename

@@ -17,9 +17,12 @@
 #include "reader/KVStreamReader.h"
 #include "SortedMerge.h"
 #include "ReduceOperation.h"
+#include <sys/stat.h>
+#include <boost/filesystem.hpp>
 
 using namespace v8;
 using namespace std;
+using namespace boost::filesystem;
 
 class ArrayBufferAllocator : public v8::ArrayBuffer::Allocator {
 public:
@@ -38,12 +41,36 @@ public:
 };
 
 void map_function(Isolate::CreateParams create_params, const char* filename, const char* dir_output, const char* js_source){
-    SeqWriter writer(dir_output);
-    CloudTrailReader reader(filename);
 
-    MapOperation mapOperation(create_params, &writer);
+    struct stat sb;
 
-    mapOperation.map(&reader, js_source);
+    if (stat(filename, &sb) == 0 && S_ISDIR(sb.st_mode)){
+        boost::filesystem::recursive_directory_iterator itr(filename);
+        SeqWriter writer(dir_output);
+
+        while (itr != boost::filesystem::recursive_directory_iterator())
+        {
+
+            if(is_regular_file(itr->path())){
+                //std::cout << itr->path().string() << std::endl;
+
+                CloudTrailReader reader(itr->path().c_str());
+
+                MapOperation mapOperation(create_params, &writer);
+
+                mapOperation.map(&reader, js_source);
+            }
+
+            ++itr;
+        }
+    } else {
+        SeqWriter writer(dir_output);
+        CloudTrailReader reader(filename);
+
+        MapOperation mapOperation(create_params, &writer);
+
+        mapOperation.map(&reader, js_source);
+    }
 }
 
 int main(int argc, char *argv[]) {

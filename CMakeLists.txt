@@ -10,7 +10,7 @@ include_directories(BEFORE "${V8DIR}/include")
 set(V8TARGET "${V8DIR}/out/native/obj.target")
 
 link_libraries(
-        "icuuc" "icui18n" "v8" "v8_libplatform"
+        "icuuc" "icui18n" "v8" "v8_libplatform" "z" "boost_system" "boost_filesystem"
 )
 
 find_package(RapidJSON)

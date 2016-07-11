@@ -5,10 +5,12 @@
 #include "CloudTrailReader.h"
 
 #include <iostream>
+#include <zlib.h>
 #include "rapidjson/reader.h"
 #include "rapidjson/filereadstream.h"
 #include "rapidjson/writer.h"
 #include "../consts.h"
+
 
 using namespace std;
 using namespace rapidjson;
@@ -175,14 +177,35 @@ CloudTrailReader::CloudTrailReader(const char *filename) {
     this->filename = filename;
 }
 
-int CloudTrailReader::get_records(void *ref, record_callback callback) {
-    FILE* fh = fopen(filename,"r");
-    char buffer[MAX_VAL_SIZE];
 
+
+int CloudTrailReader::get_records(void *ref, record_callback callback) {
+
+
+
+
+    // Try to de-compress in memory
+    auto filename_len = strlen(filename);
+
+    if(filename_len > 5 && strcmp(filename + filename_len - 5, ".json") == 0)
+        process_plain(filename, ref, callback);
+    else if(filename_len > 3 && strcmp(filename + filename_len - 3, ".gz") == 0)
+        process_gzip(filename, ref, callback);
+
+
+
+
+    return 0;
+};
+
+void CloudTrailReader::process_plain(const char *filename, void *ref, record_callback callback) {
     MyHandler handler;
 
     handler.ref = ref;
     handler.rcallback = callback;
+
+    FILE* fh = fopen(filename,"r");
+    char buffer[MAX_VAL_SIZE];
 
     FileReadStream readStream(fh, buffer, MAX_VAL_SIZE);
     Reader reader;
@@ -191,6 +214,33 @@ int CloudTrailReader::get_records(void *ref, record_callback callback) {
     handler.Close();
 
     fclose(fh);
+}
 
-    return 0;
-};
+void CloudTrailReader::process_gzip(const char *filename, void *ref, record_callback callback) {
+    char buf[8000];
+
+    gzFile fi = gzopen(filename,"rb");
+    if (fi == NULL) {
+        printf("Error: Failed to gzopen %s\n", filename);
+        exit(0);
+    }
+
+    gzrewind(fi);
+
+    char* tmpname = tempnam(nullptr, "v8mr");
+    FILE* fh = fopen(tmpname, "wb");
+
+    while(!gzeof(fi))
+    {
+        int len = gzread(fi,buf,sizeof(buf));
+        fwrite(buf, len, 1, fh);
+        //buf contains len bytes of decompressed data
+    }
+    gzclose(fi);
+    fclose(fh);
+
+    //printf("Extracted file to:%s\n", tmpname);
+
+    process_plain(tmpname, ref, callback);
+    unlink(tmpname);
+}
