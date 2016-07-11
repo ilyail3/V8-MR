@@ -33,6 +33,7 @@ private:
     const char* dir_name;
 
     void flush();
+    unsigned long records = 0;
 
 public:
     virtual void write(char* key, char* value = nullptr);

@@ -51,7 +51,7 @@ void SeqWriter::flush() {
         }
 
 
-        printf("flushing to:%s\n", flush_output);
+        printf("flushing to:%s %ld records\n", flush_output, records);
         SeqFileWriter write(flush_output);
 
         // Don't do that since it's hard to maintain when doing seek-less merges
@@ -93,6 +93,8 @@ char* SeqWriter::copy_string(char *string) {
 void SeqWriter::write(char *key, char *value) {
     if(offset+strlen(key)+1 > BUFFER_SIZE)
         flush();
+
+    records++;
 
     if(data.find(key) == data.end()) {
         // If doesn't exist create and copy key
