@@ -180,10 +180,6 @@ CloudTrailReader::CloudTrailReader(const char *filename) {
 
 
 int CloudTrailReader::get_records(void *ref, record_callback callback) {
-
-
-
-
     // Try to de-compress in memory
     auto filename_len = strlen(filename);
 
@@ -191,9 +187,6 @@ int CloudTrailReader::get_records(void *ref, record_callback callback) {
         process_plain(filename, ref, callback);
     else if(filename_len > 3 && strcmp(filename + filename_len - 3, ".gz") == 0)
         process_gzip(filename, ref, callback);
-
-
-
 
     return 0;
 };

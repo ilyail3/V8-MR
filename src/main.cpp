@@ -17,6 +17,7 @@
 #include "reader/KVStreamReader.h"
 #include "SortedMerge.h"
 #include "ReduceOperation.h"
+#include "RecordCompressor.h"
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
 
@@ -104,13 +105,15 @@ int main(int argc, char *argv[]) {
     //printf("Result written to:%s\n", reduce_file);
     pretty_print(reduce_file, pretty_output);*/
 
+    RecordCompressor comp;
+    comp.compress_dir("/home/ilya/sync","/tmp/records.bin.gz");
 
-    map_function(
+    /*map_function(
             create_params,
             argv[1],
             "/tmp/map_results",
             "function map(obj,yield){ yield(obj.userAgent); }"
-    );
+    );*/
 
     /*KVStreamReader reader("/tmp/map_results/00000.map");
 
@@ -128,7 +131,7 @@ int main(int argc, char *argv[]) {
         printf("%s\n", item);
 
     }*/
-    {
+    /*{
         SortedMerge merger;
         SeqFileWriter writer("/tmp/merge");
 
@@ -149,7 +152,7 @@ int main(int argc, char *argv[]) {
 
         r.reduce(&reader,
                  "function reduce(key, values_cb, yield){ var i = 0 ; values_cb(function(v){ i += 1; }); yield(key, i); }");
-    }
+    }*/
 
     V8::Dispose();
     V8::ShutdownPlatform();
