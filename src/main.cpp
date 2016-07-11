@@ -19,6 +19,7 @@
 #include "ReduceOperation.h"
 #include "RecordCompressor.h"
 #include "MapSeqOperation.h"
+#include "MapCassandraOperation.h"
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
 
@@ -88,6 +89,19 @@ void map_seq_function(Isolate::CreateParams create_params, const char* filename,
     printf("Map took %0.2f seconds\n", elapsed_secs);
 }
 
+void map_cassandra_function(Isolate::CreateParams create_params, const char* account, int year, int month, int bucket, const char* dir_output, const char* js_source){
+    clock_t begin = clock();
+
+    SeqWriter writer(dir_output);
+    MapCassandraOperation seq(create_params, &writer);
+    seq.map(account, year, month, bucket, js_source);
+
+    clock_t end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+    printf("Map took %0.2f seconds\n", elapsed_secs);
+}
+
 int main(int argc, char *argv[]) {
 
 
@@ -122,9 +136,19 @@ int main(int argc, char *argv[]) {
     /*RecordCompressor comp;
     comp.compress_dir("/tmp/sync","/tmp/records2.bin.gz");*/
 
-    map_seq_function(
+    /*map_seq_function(
             create_params,
             argv[1],
+            "/mnt/ramdisk/map_results",
+            "function map(obj,yield){ yield(obj.userAgent); }"
+    );*/
+
+    map_cassandra_function(
+            create_params,
+            "181239768896",
+            2014,
+            4,
+            8,
             "/mnt/ramdisk/map_results",
             "function map(obj,yield){ yield(obj.userAgent); }"
     );
