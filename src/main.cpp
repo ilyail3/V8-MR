@@ -18,6 +18,7 @@
 #include "SortedMerge.h"
 #include "ReduceOperation.h"
 #include "RecordCompressor.h"
+#include "MapSeqOperation.h"
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
 
@@ -74,6 +75,19 @@ void map_function(Isolate::CreateParams create_params, const char* filename, con
     }
 }
 
+void map_seq_function(Isolate::CreateParams create_params, const char* filename, const char* dir_output, const char* js_source){
+    clock_t begin = clock();
+
+    SeqWriter writer(dir_output);
+    MapSeqOperation seq(create_params, &writer);
+    seq.map(filename, js_source);
+
+    clock_t end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+    printf("Map took %0.2f seconds\n", elapsed_secs);
+}
+
 int main(int argc, char *argv[]) {
 
 
@@ -105,15 +119,17 @@ int main(int argc, char *argv[]) {
     //printf("Result written to:%s\n", reduce_file);
     pretty_print(reduce_file, pretty_output);*/
 
-    RecordCompressor comp;
-    comp.compress_dir("/home/ilya/sync","/tmp/records.bin.gz");
+    /*RecordCompressor comp;
+    comp.compress_dir("/tmp/sync","/tmp/records2.bin.gz");*/
 
-    /*map_function(
+    map_seq_function(
             create_params,
             argv[1],
-            "/tmp/map_results",
+            "/mnt/ramdisk/map_results",
             "function map(obj,yield){ yield(obj.userAgent); }"
-    );*/
+    );
+
+
 
     /*KVStreamReader reader("/tmp/map_results/00000.map");
 
@@ -142,13 +158,13 @@ int main(int argc, char *argv[]) {
 
 
         merger.merge((char **) files, &writer);
-    }
-    {
-        SeqWriter writer("/tmp/reduce_res");
+    }*/
+    /*{
+        SeqWriter writer("/mnt/ramdisk/reduce_res");
 
         ReduceOperation r(create_params, &writer);
 
-        KVStreamReader reader((char *) "/tmp/merge");
+        KVStreamReader reader((char *) "/mnt/ramdisk/map_results/00000.map");
 
         r.reduce(&reader,
                  "function reduce(key, values_cb, yield){ var i = 0 ; values_cb(function(v){ i += 1; }); yield(key, i); }");
