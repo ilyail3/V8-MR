@@ -22,6 +22,16 @@
 #include "MapCassandraOperation.h"
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
+#include <rapidjson/filereadstream.h>
+#include <aws/core/Aws.h>
+
+#include <aws/sqs/SQSClient.h>
+#include <aws/sqs/model/ReceiveMessageRequest.h>
+#include <aws/sqs/model/DeleteMessageRequest.h>
+#include <aws/core/auth/AWSCredentialsProvider.h>
+
+#include "rapidjson/document.h"
+using namespace rapidjson;
 
 using namespace v8;
 using namespace std;
@@ -89,7 +99,7 @@ void map_seq_function(Isolate::CreateParams create_params, const char* filename,
     printf("Map took %0.2f seconds\n", elapsed_secs);
 }
 
-void map_cassandra_function(Isolate::CreateParams create_params, const char* account, int year, int month, int bucket, const char* dir_output, const char* js_source){
+/*void map_cassandra_function(Isolate::CreateParams create_params, const char* account, int year, int month, int bucket, const char* dir_output, const char* js_source){
     clock_t begin = clock();
 
     SeqWriter writer(dir_output);
@@ -100,6 +110,32 @@ void map_cassandra_function(Isolate::CreateParams create_params, const char* acc
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
     printf("Map took %0.2f seconds\n", elapsed_secs);
+}*/
+
+char* read_file(const char* filename){
+    FILE *fp;
+    long lSize;
+    char *buffer;
+
+    fp = fopen ( filename , "rb" );
+    if( !fp ) perror(filename),exit(1);
+
+    fseek( fp , 0L , SEEK_END);
+    lSize = ftell( fp );
+    rewind( fp );
+
+    /* allocate memory for entire content */
+    buffer = (char *) calloc(1, lSize + 1 );
+    if( !buffer ) fclose(fp),fputs("memory alloc fails",stderr),exit(1);
+
+    /* copy the file into the buffer */
+    if( 1!=fread( buffer , lSize, 1 , fp) )
+        fclose(fp),free(buffer),fputs("entire read fails",stderr),exit(1);
+
+    /* do your work here, buffer is a string contains the whole text */
+
+    fclose(fp);
+    return buffer;
 }
 
 int main(int argc, char *argv[]) {
@@ -143,7 +179,77 @@ int main(int argc, char *argv[]) {
             "function map(obj,yield){ yield(obj.userAgent); }"
     );*/
 
-    map_cassandra_function(
+
+
+    char* config_json = read_file(argv[1]);
+    Document config;
+
+    config.Parse(config_json);
+
+    assert(config.HasMember("aws"));
+
+    const Aws::String access_key(config["aws"]["access_key"].GetString());
+    const Aws::String secret_key(config["aws"]["secret_key"].GetString());
+
+    Aws::SDKOptions options;
+    Aws::InitAPI(options);
+
+    Aws::Client::ClientConfiguration client_config;
+    client_config.region = Aws::Region::US_EAST_1;
+    client_config.connectTimeoutMs = 60000;
+    client_config.requestTimeoutMs = 60000;
+
+    const Aws::Auth::AWSCredentials creds(access_key, secret_key);
+    Aws::SQS::SQSClient client(creds, client_config);
+
+
+    const char* queue_url = config["task_sqs"]["url"].GetString();
+    Aws::SQS::Model::ReceiveMessageRequest req;
+    req.SetWaitTimeSeconds(20);
+    req.SetMaxNumberOfMessages(1);
+    req.SetQueueUrl(queue_url);
+
+    while(true){
+        auto response = client.ReceiveMessage(req);
+
+        if(!response.IsSuccess()){
+            printf("Error:%s\n", response.GetError().GetMessage().c_str());
+            printf("Exception name:%s\n", response.GetError().GetExceptionName().c_str());
+            exit(1);
+        }
+        auto msg_vector = response.GetResult().GetMessages();
+
+        for(auto msg = msg_vector.begin() ; msg != msg_vector.end() ; msg ++){
+            printf("Msg:%s\n", msg->GetBody().c_str());
+
+            // Process message
+
+
+            // Delete message from the queue
+            Aws::SQS::Model::DeleteMessageRequest del_message;
+            del_message.SetQueueUrl(queue_url);
+            del_message.SetReceiptHandle(msg->GetReceiptHandle());
+
+            auto res = client.DeleteMessage(del_message);
+
+            if(!res.IsSuccess()){
+                printf("Failed to delete message\n");
+                printf("Error:%s\n", response.GetError().GetMessage().c_str());
+                printf("Exception name:%s\n", response.GetError().GetExceptionName().c_str());
+                exit(1);
+            }
+        }
+
+        printf("messages: %ld\n", msg_vector.size());
+    }
+
+
+
+    Aws::ShutdownAPI(options);
+
+
+
+    /*map_cassandra_function(
             create_params,
             "181239768896",
             2014,
@@ -151,7 +257,7 @@ int main(int argc, char *argv[]) {
             8,
             "/mnt/ramdisk/map_results",
             "function map(obj,yield){ yield(obj.userAgent); }"
-    );
+    );*/
 
 
 

@@ -3,7 +3,7 @@ project(V8FileEval)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 
-set(V8DIR "/home/ilya/Downloads/v8")
+set(V8DIR "../v8")
 
 include_directories(BEFORE "${V8DIR}/include")
 
@@ -18,6 +18,9 @@ link_libraries(
         "boost_system"
         "boost_filesystem"
         "cassandra"
+        "aws-cpp-sdk-core"
+        "aws-cpp-sdk-sqs"
+        "aws-cpp-sdk-s3"
 )
 
 find_package(RapidJSON)
@@ -36,4 +39,6 @@ add_executable(V8FileEval ${V8FileEval_SRC})
 #)
 
 file(COPY "${V8DIR}/out/native/natives_blob.bin" DESTINATION "./")
+file(COPY "${V8DIR}/out/native/snapshot_blob_ignition.bin" DESTINATION "./")
 file(COPY "${V8DIR}/out/native/snapshot_blob.bin" DESTINATION "./")
+configure_file("config.json" "config.json" COPYONLY)

@@ -8,9 +8,10 @@
 #include "consts.h"
 #include "YieldCallback.h"
 
-MapCassandraOperation::MapCassandraOperation(Isolate::CreateParams create_params, KVWriter *writer) {
+MapCassandraOperation::MapCassandraOperation(Isolate::CreateParams create_params, KVWriter *writer, const char* cassandra_nodes) {
     this->create_params = create_params;
     this->writer = writer;
+    this->cassandra_nodes = cassandra_nodes;
 }
 
 void MapCassandraOperation::map(const char* account, int year, int month, int bucket, const char *javascript) {

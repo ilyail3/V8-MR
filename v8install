@@ -1,3 +1,12 @@
+# some guides suggest 4.8, but it doesn't define libv8_libplatform properly
+# 5.1 is the stable version at the time of writing
+# check here: https://omahaproxy.appspot.com/
+git checkout -b 5.1 -t branch-heads/5.1
+
+# that one worked for 4.8, not for 5.1, damends to be configured, no clue as to how to configure it
+# or if it's even necessary, seems to build without it as well
+# gclient sync
+
 make native -j8 library=shared
 
 cd src
